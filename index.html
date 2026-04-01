@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL // HACKER CHAT</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body class="chat-page">
+    <div class="matrix-bg" id="matrixBg"></div>
+    
+    <div class="scanline"></div>
+    <div class="crt-overlay"></div>
+    
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="blink">[</span> HACKER CHAT <span class="blink">]</span>
+                </div>
+                <div class="connection-status">
+                    <span class="status-dot online"></span>
+                    <span class="status-text">ENCRYPTED</span>
+                </div>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <span id="userAvatar">></span>
+                </div>
+                <div class="user-details">
+                    <span class="username" id="currentUser">Anonymous</span>
+                    <span class="user-role">OPERATOR</span>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <span class="stat-label">ACTIVE USERS:</span>
+                    <span class="stat-value" id="activeUsers">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">MESSAGES:</span>
+                    <span class="stat-value" id="messageCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">UPTIME:</span>
+                    <span class="stat-value" id="uptime">00:00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">ENCRYPTION:</span>
+                    <span class="stat-value encrypt">AES-256</span>
+                </div>
+            </div>
+            
+            <div class="online-users">
+                <h3><span class="prompt">$</span> online_users</h3>
+                <ul id="onlineUsersList">
+                    <li class="user-item">
+                        <span class="user-status online"></span>
+                        <span class="user-name" id="sidebarUser">You</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button id="clearChatBtn" class="terminal-btn-small">
+                    [ CLEAR CHAT ]
+                </button>
+                <button id="logoutBtn" class="terminal-btn-small logout">
+                    [ DISCONNECT ]
+                </button>
+                <div class="session-info">
+                    <p>Session expires: <span id="sessionExpiry">--:--:--</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="main-chat">
+            <div class="chat-header">
+                <div class="header-left">
+                    <span class="channel-name">#general</span>
+                    <span class="topic">Secure communication channel - All messages auto-delete in 24h</span>
+                </div>
+                <div class="header-right">
+                    <span class="clock" id="clock">00:00:00</span>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="system-message">
+                    <span class="timestamp">[SYSTEM]</span>
+                    <span class="message-content">
+                        Welcome to HACKER CHAT v2.0.4<br>
+                        Connection established. Encryption: AES-256-GCM<br>
+                        All messages are stored locally and will be automatically deleted after 24 hours.<br>
+                        Type /help for available commands.
+                    </span>
+                </div>
+            </div>
+            
+            <div class="chat-input-area">
+                <div class="input-info">
+                    <span class="prompt" id="inputPrompt">root@system:~$</span>
+                </div>
+                <div class="input-wrapper">
+                    <input type="text" id="messageInput" class="terminal-input chat-input" 
+                           placeholder="Enter message or command..." autocomplete="off">
+                    <button id="sendBtn" class="send-btn">
+                        <span>[ SEND ]</span>
+                    </button>
+                </div>
+                <div class="typing-indicator" id="typingIndicator"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+    
+    <script src="js/chat.js"></script>
+</body>
+</html>
