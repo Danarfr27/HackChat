@@ -4,19 +4,8 @@
  */
 
 // ========================================
-// CONFIGURATION - Edit these credentials
+// LOGIN VIA SERVERLESS API
 // ========================================
-// Default credentials - Change these for production
-// In Vercel, you can set these as Environment Variables
-const CONFIG = {
-    // Multiple user accounts supported
-    users: [
-        { username: 'admin', password: 'hacker123', accessCode: '1337', role: 'ADMIN' },
-        { username: 'operator', password: 'secureshell', accessCode: '4242', role: 'OPERATOR' },
-        { username: 'guest', password: 'guestpass', accessCode: '0000', role: 'GUEST' }
-    ],
-    sessionDuration: 24 * 60 * 60 * 1000 // 24 hours in milliseconds
-};
 
 // DOM Elements
 const usernameInput = document.getElementById('username');
@@ -105,37 +94,33 @@ function updateSessionTimer() {
 // AUTHENTICATION FUNCTIONS
 // ========================================
 
-/**
- * Validate user credentials
- */
-function validateCredentials(username, password, accessCode) {
-    const user = CONFIG.users.find(u => 
-        u.username === username && 
-        u.password === password && 
-        u.accessCode === accessCode
-    );
-    
-    return user || null;
+// Validate credentials via serverless API
+async function validateCredentials(username, password, accessCode) {
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, accessCode })
+        });
+        const data = await res.json();
+        if (data.success) {
+            return data.session;
+        } else {
+            return null;
+        }
+    } catch (e) {
+        return null;
+    }
 }
 
 /**
- * Create user session
+ * Create user session (from backend session)
  */
-function createSession(user) {
-    const session = {
-        id: generateSessionId(),
-        username: user.username,
-        role: user.role,
-        loginTime: Date.now(),
-        expiresAt: Date.now() + CONFIG.sessionDuration
-    };
-    
+function createSession(session) {
     // Store session in localStorage
     localStorage.setItem('hackerChat_session', JSON.stringify(session));
-    
     // Set session start time for chat cleanup
     localStorage.setItem('hackerChat_sessionStart', Date.now().toString());
-    
     return session;
 }
 
@@ -172,60 +157,44 @@ function checkExistingSession() {
 /**
  * Handle login
  */
-function handleLogin() {
+async function handleLogin() {
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
     const accessCode = accessCodeInput.value.trim();
-    
     // Validation
     if (!username) {
         showError('Username required');
         usernameInput.focus();
         return;
     }
-    
     if (!password) {
         showError('Password required');
         passwordInput.focus();
         return;
     }
-    
     if (!accessCode) {
         showError('Access code required');
         accessCodeInput.focus();
         return;
     }
-    
-    // Validate credentials
-    const user = validateCredentials(username, password, accessCode);
-    
-    if (user) {
-        // Success
+    // Validate credentials via backend
+    showSuccess('Authenticating...');
+    const session = await validateCredentials(username, password, accessCode);
+    if (session) {
         showSuccess('Authentication successful. Redirecting...');
-        
-        // Create session
-        createSession(user);
-        
-        // Disable inputs
+        createSession(session);
         usernameInput.disabled = true;
         passwordInput.disabled = true;
         accessCodeInput.disabled = true;
         loginBtn.disabled = true;
-        
-        // Redirect to chat
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 1500);
     } else {
-        // Failed
         showError('Invalid credentials. Access denied.');
-        
-        // Clear inputs
         passwordInput.value = '';
         accessCodeInput.value = '';
         passwordInput.focus();
-        
-        // Add shake animation
         loginBtn.classList.add('shake');
         setTimeout(() => loginBtn.classList.remove('shake'), 500);
     }
