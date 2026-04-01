@@ -110,42 +110,51 @@ function playNotificationSound() {
 // SESSION MANAGEMENT
 // ========================================
 
+// ========================================
+// MESSAGE STORAGE & MANAGEMENT (SERVERLESS)
+// ========================================
 /**
  * Check and validate session
  */
 function checkSession() {
-    const sessionStr = localStorage.getItem('hackerChat_session');
-    
-    if (!sessionStr) {
-        // No session, redirect to login
-        window.location.href = 'login.html';
-        return false;
-    }
-    
+async function getMessages() {
     try {
-        session = JSON.parse(sessionStr);
+        const res = await fetch('/api/chat');
+        const data = await res.json();
+        return data.messages || [];
+    } catch (e) {
+        return [];
+    }
+}
         
         // Check if session expired
         if (Date.now() > session.expiresAt) {
             // Session expired
-            logout();
-            return false;
+async function addMessage(content, sender = null, type = 'normal') {
+    try {
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: sender || currentUser, text: content })
+        });
+        const data = await res.json();
+        if (data.success) {
+            return data.message;
         }
+    } catch (e) {}
+    return null;
+}
         
         currentUser = session.username;
         return true;
     } catch (e) {
-        logout();
-        return false;
-    }
+function clearAllMessages() {
+    chatMessages.innerHTML = '';
+    addSystemMessage('All messages have been cleared by ' + currentUser);
+    messageCount = 0;
+    updateStats();
+    showToast('All messages cleared');
 }
-
-/**
- * Logout user
- */
-function logout() {
-    localStorage.removeItem('hackerChat_session');
-    localStorage.removeItem('hackerChat_sessionStart');
     window.location.href = 'login.html';
 }
 
@@ -325,9 +334,8 @@ function displayMessage(message, scroll = true) {
 /**
  * Load all messages
  */
-function loadMessages() {
+async function loadMessages() {
     chatMessages.innerHTML = '';
-    
     // Add welcome message
     const welcomeDiv = document.createElement('div');
     welcomeDiv.className = 'system-message';
@@ -336,18 +344,16 @@ function loadMessages() {
         <span class="message-content">
             Welcome to HACKER CHAT v2.0.4<br>
             Connection established. Encryption: AES-256-GCM<br>
-            All messages are stored locally and will be automatically deleted after 24 hours.<br>
+            All messages are relayed via serverless API and will be automatically deleted after 24 hours.<br>
             Type /help for available commands.
         </span>
     `;
     chatMessages.appendChild(welcomeDiv);
-    
-    // Load stored messages
-    const messages = getMessages();
+    // Load messages from API
+    const messages = await getMessages();
     messages.forEach(msg => {
         displayMessage(msg, false);
     });
-    
     scrollToBottom();
     messageCount = messages.length;
     updateStats();
@@ -356,9 +362,9 @@ function loadMessages() {
 /**
  * Add system message
  */
-function addSystemMessage(content) {
-    const message = addMessage(content, 'SYSTEM', 'system');
-    displayMessage(message);
+async function addSystemMessage(content) {
+    const message = await addMessage(content, 'SYSTEM', 'system');
+    if (message) displayMessage(message);
 }
 
 /**
@@ -465,11 +471,9 @@ function processCommand(input) {
 /**
  * Send message
  */
-function sendMessage() {
+async function sendMessage() {
     const content = messageInput.value.trim();
-    
     if (!content) return;
-    
     // Check if it's a command
     if (content.startsWith('/')) {
         if (processCommand(content)) {
@@ -477,15 +481,11 @@ function sendMessage() {
             return;
         }
     }
-    
-    // Add message
-    const message = addMessage(content);
-    displayMessage(message);
-    
+    // Add message via API
+    const message = await addMessage(content);
+    if (message) displayMessage(message);
     // Clear input
     messageInput.value = '';
-    
-    // Simulate typing indicator for other users (visual effect)
     showTypingIndicator();
 }
 
@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUserInterface();
     
     // Load messages
-    loadMessages();
+    await loadMessages();
     
     // Setup listeners
     setupEventListeners();
